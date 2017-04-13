@@ -17,10 +17,19 @@ var pantryObj = {
     "Ribs": "Meat",
     "Rump Roast": "Meat",
     "Beef": "Meat",
+    "Lamb": "Meat",
+    "Duck": "Meat",
+    "Turkey": "Meat",
+    "Brisket": "Meat",
+    "Sirloin": "Meat",
 
     "Salmon": "Seafood",
     "Shrimp": "Seafood",
     "Crab": "Seafood",
+    "Tilapia": "Seafood",
+    "Clams": "Seafood",
+    "Trout": "Seafood",
+    "Catfish": "Seafood",
 
     "Broccoli": "Produce",
     "Cauliflower": "Produce",
@@ -34,23 +43,47 @@ var pantryObj = {
     "Garlic": "Produce",
     "Lemon": "Produce",
     "Cucumber": "Produce",
+    "Brussels sprouts": "Produce",
+    "Celery": "Produce",
+    "Cabbage": "Produce",
+    "Collard greens": "Produce",
+    "Kale": "Produce",
+    "Spinach": "Produce",
 
     "Black Olives": "Canned and Jarred",
     "Pickles": "Canned and Jarred",
     "Salsa": "Canned and Jarred",
+    "Green Olives": "Canned and Jarred",
+    "Pickles": "Canned and Jarred",
+    "Tuna": "Canned and Jarred",
+    "Black Beans": "Canned and Jarred",
+    "Baked Beans": "Canned and Jarred",
+    "Artichoke": "Canned and Jarred",
 
     "Cheddar Cheese": "Cheese",
     "American Cheese": "Cheese",
     "Provolone": "Cheese",
     "Swiss Cheese": "Cheese",
     "Havarti": "Cheese",
+    "Cream Cheese": "Cheese",
+    "Gouda": "Cheese",
+    "Cottage Cheese": "Cheese",
 
     "Eggs": "Milk, Eggs, Other Dairy",
     "Milk": "Milk, Eggs, Other Dairy",
     "Butter": "Milk, Eggs, Other Dairy",
+    "Buttermilk": "Milk, Eggs, Other Dairy",
+    "Sour Cream": "Milk, Eggs, Other Dairy",
+    "Yogurt": "Milk, Eggs, Other Dairy",
+    "Whipping Cream": "Milk, Eggs, Other Dairy",
 
     "Rice": "Pasta and Rice",
-    "Pasta": "Pasta and Rice"
+    "Pasta": "Pasta and Rice",
+    "Bread": "Pasta and Rice",
+    "Bagel": "Pasta and Rice",
+    "Couscous": "Pasta and Rice",
+    "Spaghetti": "Pasta and Rice",
+    "Macaroni": "Pasta and Rice"
 };
 
 // Initialize Firebase
@@ -71,6 +104,8 @@ $(document).ready(function () {
     var addToMainPantryPage = [];
     var missingIngredients = [];
     var suppliedIngredients = [];
+    var selectedRecipeItems = [];
+    var pantryItemInRecipe = [];
     var shoppingCartTrigger = false;
 
     $(".button-collapse").sideNav();
@@ -131,6 +166,7 @@ $(document).ready(function () {
     function compareIngredients(recipe) {
         missingIngredients = [];
         suppliedIngredients = [];
+        selectedRecipeItems = [];
         database.ref().on("value", function (snapshot) {
             if (snapshot.child("pantry").exists()) {
                 pantryItems = snapshot.val().pantry;
@@ -154,10 +190,10 @@ $(document).ready(function () {
                         // set item to found
                         foundIngredient = true;
                         suppliedIngredients.push(recipe[i].name);
+                        selectedRecipeItems.push(pantryItems[j]);
                     }
                 }
             }
-
             // if item was found reset trigger
             if (foundIngredient) {
                 foundIngredient = false;
@@ -246,7 +282,7 @@ $(document).ready(function () {
         $(cardContent).append(recipeData.instructions);
         var cardAction = $("<div>");
         $(cardAction).addClass("card-action");
-        $(cardAction).append('<a class="waves-effect waves-light btn-large" id="returnResults">Return to results</a>');
+        $(cardAction).append('<a class="waves-effect waves-light btn-large" id="returnResults">Return to results</a><a class="waves-effect waves-light btn-large" id="useRecipe">Use this recipe & remove items from Pantry</a>');
         $(cardAction).attr("data-id", recipeData.id);
         $(card).append(cardContent);
         $(card).append(cardAction);
@@ -338,7 +374,7 @@ $(document).ready(function () {
             var cannedStorage = [];
             var cheeseStorage = [];
             var dairyStorage = [];
-            var pastaRiceStorage = [];
+            var grainsStorage = [];
             // This tests to make sure there is something in the firebase.
             if (snapshot.child("pantry").exists()) {
                 $(".itemGoods2").empty();
@@ -386,7 +422,7 @@ $(document).ready(function () {
                         dairyStorage.push(food);
                         break;
                     case "Pasta and Rice":
-                        pastaRiceStorage.push(food);
+                        grainsStorage.push(food);
                         break;
                 }
             }
@@ -396,6 +432,7 @@ $(document).ready(function () {
             displayStorage(cannedStorage, $("#canned-storage"), 60);
             displayStorage(cheeseStorage, $("#cheese-storage"), 80);
             displayStorage(dairyStorage, $("#dairy-storage"), 100);
+            displayStorage(grainsStorage, $("#grains-storage"), 120);
         });
     }
 
@@ -431,14 +468,14 @@ $(document).ready(function () {
     // get the select button to go to the recipe page
     $("body").on("click", "#searchForRecipes", function () {
         // clear the local storage ingredients
-        localStorage.removeItem("ingredients")
+        localStorage.removeItem("ingredients");
         var arrSelected = [];
         // get all selected pantry items
         var selected = $("input[class^='pantryItemHere']:checked");
         for (var index = 0; index < selected.length; index++) {
             arrSelected.push(selected[index].name);
         }
-        // save item to local storage to the recipe page can grab items on load
+        // save item to local storage so the recipe page can grab items on load
         localStorage.setItem("ingredients", arrSelected.toString());
         window.location.href = "assets/html/recipe.html";
     });
@@ -492,4 +529,20 @@ $(document).ready(function () {
     displayPantryItemsOnPage();
     displayPandorasPantry();
 
+    // remove item from the firebase pantry (This is for the button on recipe.html when the user selects a recipe)
+    $("body").on("click", "#useRecipe", function (event) {
+        event.preventDefault();
+        $("#useRecipe").hide();
+        $("#returnResults").hide();
+       
+        for (var i = pantryItems.length; i > -1; i--) {
+            if ($.inArray(addToPandorasPantry[i], selectedRecipeItems) === -1) { 
+            } else { 
+                pantryItems.splice(i, 1);
+            } 
+        }
+        database.ref().set({ pantry: pantryItems });
+    });
+
 });
+
