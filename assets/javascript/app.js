@@ -534,12 +534,12 @@ $(document).ready(function () {
         event.preventDefault();
         $("#useRecipe").hide();
         $("#returnResults").hide();
-       
+
         for (var i = pantryItems.length; i > -1; i--) {
-            if ($.inArray(addToPandorasPantry[i], selectedRecipeItems) === -1) { 
-            } else { 
+            if ($.inArray(addToPandorasPantry[i], selectedRecipeItems) === -1) {
+            } else {
                 pantryItems.splice(i, 1);
-            } 
+            }
         }
         database.ref().set({ pantry: pantryItems });
     });
